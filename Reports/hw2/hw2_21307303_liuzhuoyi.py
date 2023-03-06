@@ -3,26 +3,25 @@ class StuData:
         self.data =[]
         with open(filename,'r') as inputs:
             for student in inputs.readlines():
-                #self.data.AddData(student.rstrip().split(' '))
                 self.data.append(student.rstrip().split(' '))
                 self.data[-1][-1]=int( self.data[-1][-1])
-        print(self.data)
+        #print(self.data)
     
     def AddData(self,name,stu_num,gender,age):
         self.data.append([name,stu_num,gender,int(age)])
-        print(self.data)
+        #print(self.data)
 
-    def SortData(self,go):
-        if go=='name':
+    def SortData(self,sortkey):
+        if sortkey=='name':
             keys=0
-        elif go=='stu_num':
+        elif sortkey=='stu_num':
             keys=1
-        elif go=='gender':
+        elif sortkey=='gender':
             keys=2
         else:
             keys=3
-        self.data.sort(key=lambda item:item[keys], reverse=False)
-        print(self.data)
+        self.data.sort(key=lambda item:item[keys])
+        #print(self.data)
 
     def ExportFile(self,filename:str):
         with open(filename,'w') as outputs:
