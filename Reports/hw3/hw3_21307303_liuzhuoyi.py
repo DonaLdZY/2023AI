@@ -16,17 +16,26 @@ class task1:
             if i!='~'+key:
                 ans.append(i)
         return tuple(ans)
+    def order(self,ans:list,fa:list,origin:int,x:int,temp:list):
+        if x<=origin or temp[x]==1:
+            print(x,origin,temp[x])
+            return x
+        print("go")
+        lf=self.order(ans,fa,origin,fa[x][0],temp)
+        rf=self.order(ans,fa,origin,fa[x][1],temp)
+        ans.append(str(len(ans)+1)+' R['+str(lf)+','+str(rf)+']: '+str(f[x][2]))
+        return x
 def ResolutionProp(KB):
-    """
-    :param KB: set(tuple(str))
-    :return: list[str]
-    """
     ans=[]
     a=list(KB)
     ai=len(a)
+    ais=len(a)
+    fa=[]
+    fa=[(0,0,"") for i in range(ai+1)]
     for i in range(ai):
         ans.append(str(i+1)+' '+str(a[i]))
-    for i in range(ai):
+    i=1
+    while (i<ai):
         j=i+1
         while j<ai:
             (key,fr)=task1.check(a[i],a[j])
@@ -38,21 +47,56 @@ def ResolutionProp(KB):
                     aadd=task1.fusion(a[j],a[i],key)
                 a.append(aadd)
                 ai+=1
+                fa.append((i+1,j+1,str(aadd)))
                 ans.append(str(ai)+' R['+str(i+1)+','+str(j+1)+']: '+str(aadd))
                 if aadd==():
+                    temp=[0 for i in range(ai+1)]
+                    task1.order(ex,fa,ais,ai,temp)
                     return ans
             j+=1
+        i+=1
     return ans
 
+# def ResolutionProp(KB):
+#     ans=[]
+#     a=list(KB)
+#     ai=len(a)
+#     ais=len(a)
+#     fa=[]
+#     fa=[(0,0,"") for i in range(ai+1)]
+#     for i in range(ai):
+#         ans.append(str(i+1)+' '+str(a[i]))
+#     i=1
+#     while (i<ai):
+#         j=i+1
+#         while j<ai:
+#             (key,fr)=task1.check(a[i],a[j])
+#             if (key!=''):
+#                 aadd=()
+#                 if fr:
+#                     aadd=task1.fusion(a[i],a[j],key)
+#                 else:
+#                     aadd=task1.fusion(a[j],a[i],key)
+#                 a.append(aadd)
+#                 ai+=1
+#                 fa.append((i+1,j+1,str(aadd)))
+#                 ans.append(str(ai)+' R['+str(i+1)+','+str(j+1)+']: '+str(aadd))
+#                 if aadd==():
+#                     temp=[0 for i in range(ai+1)]
+#                     task1.order(ex,fa,ais,ai,temp)
+#                     return ans
+#             j+=1
+#         i+=1
+#     return ans
 
-def diff(f1:list,f2:list): #找出不匹配项
-    for i in range(len(f1)):
-        if f1[i]!=f2[i]:
-            return (f1[i],f2[i])
 def isvariate(f:str): #判断是否是变量
     if f in ['xx','yy','zz','uu','vv','ww']:
         return True
     return False
+def diff(f1:list,f2:list): #找出不匹配项
+    for i in range(len(f1)):
+        if f1[i]!=f2[i]:
+            return (f1[i],f2[i])
 def peel(f:str): #去掉最外层谓词
     nl=0
     while nl<len(f) and (f[nl].isalpha() or f[nl]=='~'):
@@ -65,11 +109,6 @@ def peel(f:str): #去掉最外层谓词
         f=""
     return (name,f)
 def MGU(f1:str, f2:str):
-    """
-    :param f1: str
-    :param f2: str
-    :return: dict
-    """
     (f1name,f1in)=peel(f1)
     (f2name,f2in)=peel(f2)
     if (f1name != f2name):
@@ -88,19 +127,16 @@ def MGU(f1:str, f2:str):
             if f1x in ans:
                 return {}
             ans[f1x]=f2x
-            i=0
-            while i<len(f1item):
-                f1item[i]=f1item[i].replace(f1x,f2x)
-                i+=1
-            #还得改字典
+            f1item=[f1item[i].replace(f1x,f2x) for i in range(len(f1item))]
+            f2item=[f2item[i].replace(f1x,f2x) for i in range(len(f2item))]
+            ans=dict((k,v.replace(f1x,f2x)) for k,v in ans.items())
         elif (isvariate(f2x) and (not f2x in f1x)):
             if f2x in ans:
                 return {}
             ans[f2x]=f1x
-            i=0
-            while i<len(f2item):
-                f2item[i]=f2item[i].replace(f2x,f1x)
-                i+=1
+            f1item=[f1item[i].replace(f2x,f1x) for i in range(len(f1item))]
+            f2item=[f2item[i].replace(f2x,f1x) for i in range(len(f2item))]
+            ans=dict((k,v.replace(f2x,f1x)) for k,v in ans.items())
         else:
             return{}
     return ans
@@ -168,7 +204,11 @@ def ResolutionFOL(KB):
                 if (chg=={}):
                     ans.append(str(ai)+' R['+str(i+1)+','+str(j+1)+']: '+str(aadd))
                 else:
-                    ans.append(str(ai)+' R['+str(i+1)+','+str(j+1)+']'+str(chg)+':'+str(aadd))
+                    s=str(ai)+' R['+str(i+1)+','+str(j+1)+']{'
+                    for (key,value) in chg.items():
+                        s+=key+'='+value+','
+                    s=s[:len(s)-1]+'}: '+str(aadd)
+                    ans.append(s)
                 if aadd==():
                     return ans
             j+=1
@@ -179,14 +219,15 @@ def ResolutionFOL(KB):
 if __name__ == '__main__':
     # 测试程序
     KB1 = {('FirstGrade',), ('~FirstGrade', 'Child'), ('~Child',)}
+    #result1 = ResolutionProp(KB1)
     result1 = ResolutionProp(KB1)
     for r in result1:
         print(r)
-    MGU('P', 'P')
-    print(MGU('P(xx,a)', 'P(b,yy)'))
-    print(MGU('P(a,xx,f(g(yy)))', 'P(zz,f(zz),f(uu))'))
+    # MGU('P', 'P')
+    # print(MGU('P(xx,a)', 'P(b,yy)'))
+    # print(MGU('P(a,xx,f(g(yy)))', 'P(zz,f(zz),f(uu))'))
 
-    KB2 = {('On(a,b)',), ('On(b,c)',), ('Green(a)',), ('~Green(c)',), ('~On(xx,yy)', '~Green(xx)', 'Green(yy)')}
-    result2 = ResolutionFOL(KB2)
-    for r in result2:
-        print(r)
+    # KB2 = {('On(a,b)',), ('On(b,c)',), ('Green(a)',), ('~Green(c)',), ('~On(xx,yy)', '~Green(xx)', 'Green(yy)')}
+    # result2 = ResolutionFOL(KB2)
+    # for r in result2:
+    #     print(r)
