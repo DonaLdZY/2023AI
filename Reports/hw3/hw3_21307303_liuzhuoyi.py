@@ -16,25 +16,36 @@ class task1:
             if i!='~'+key:
                 ans.append(i)
         return tuple(ans)
-    def order(self,ans:list,fa:list,origin:int,x:int,temp:list):
-        if x<=origin or temp[x]==1:
-            print(x,origin,temp[x])
-            return x
-        print("go")
-        lf=self.order(ans,fa,origin,fa[x][0],temp)
-        rf=self.order(ans,fa,origin,fa[x][1],temp)
-        ans.append(str(len(ans)+1)+' R['+str(lf)+','+str(rf)+']: '+str(f[x][2]))
-        return x
+    def order(table:list,fa:list,origin:int,x:int):
+        temp=[i<=origin for i in range(x+1)]
+        bfs=[x,]
+        bi=0
+        while (bi<len(bfs)):
+            k=bfs[bi]
+            if k<=origin:
+                bi+=1
+                continue
+            temp[k]=True
+            if (not temp[fa[k][0]]):
+                bfs.append(fa[k][0])
+            if (not temp[fa[k][1]]):
+                bfs.append(fa[k][1])
+            bi+=1
+        ex=[]
+        for i in range(1,x+1):
+            if temp[i]:
+                ex.append(str(len(ex)+1)+' '+table[i])
+        return ex
 def ResolutionProp(KB):
-    ans=[]
+    ans=[""]
     a=list(KB)
     ai=len(a)
     ais=len(a)
     fa=[]
     fa=[(0,0,"") for i in range(ai+1)]
     for i in range(ai):
-        ans.append(str(i+1)+' '+str(a[i]))
-    i=1
+        ans.append(str(a[i]))
+    i=0
     while (i<ai):
         j=i+1
         while j<ai:
@@ -48,14 +59,12 @@ def ResolutionProp(KB):
                 a.append(aadd)
                 ai+=1
                 fa.append((i+1,j+1,str(aadd)))
-                ans.append(str(ai)+' R['+str(i+1)+','+str(j+1)+']: '+str(aadd))
+                ans.append('R['+str(i+1)+','+str(j+1)+']: '+str(aadd))
                 if aadd==():
-                    temp=[0 for i in range(ai+1)]
-                    task1.order(ex,fa,ais,ai,temp)
-                    return ans
+                    return task1.order(ans,fa,ais,ai)
             j+=1
         i+=1
-    return ans
+    return task1.order(ans,fa,ais,ai)
 
 # def ResolutionProp(KB):
 #     ans=[]
