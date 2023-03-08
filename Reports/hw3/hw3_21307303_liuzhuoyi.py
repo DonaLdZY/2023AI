@@ -16,88 +16,6 @@ class task1:
             if i!='~'+key:
                 ans.append(i)
         return tuple(ans)
-    def order(table:list,fa:list,origin:int,x:int):
-        temp=[i<=origin for i in range(x+1)]
-        bfs=[x,]
-        bi=0
-        while (bi<len(bfs)):
-            k=bfs[bi]
-            if k<=origin:
-                bi+=1
-                continue
-            temp[k]=True
-            if (not temp[fa[k][0]]):
-                bfs.append(fa[k][0])
-            if (not temp[fa[k][1]]):
-                bfs.append(fa[k][1])
-            bi+=1
-        ex=[]
-        for i in range(1,x+1):
-            if temp[i]:
-                ex.append(str(len(ex)+1)+' '+table[i])
-        return ex
-def ResolutionProp(KB):
-    ans=[""]
-    a=list(KB)
-    ai=len(a)
-    ais=len(a)
-    fa=[]
-    fa=[(0,0,"") for i in range(ai+1)]
-    for i in range(ai):
-        ans.append(str(a[i]))
-    i=0
-    while (i<ai):
-        j=i+1
-        while j<ai:
-            (key,fr)=task1.check(a[i],a[j])
-            if (key!=''):
-                aadd=()
-                if fr:
-                    aadd=task1.fusion(a[i],a[j],key)
-                else:
-                    aadd=task1.fusion(a[j],a[i],key)
-                a.append(aadd)
-                ai+=1
-                fa.append((i+1,j+1,str(aadd)))
-                ans.append('R['+str(i+1)+','+str(j+1)+']: '+str(aadd))
-                if aadd==():
-                    return task1.order(ans,fa,ais,ai)
-            j+=1
-        i+=1
-    return task1.order(ans,fa,ais,ai)
-
-# def ResolutionProp(KB):
-#     ans=[]
-#     a=list(KB)
-#     ai=len(a)
-#     ais=len(a)
-#     fa=[]
-#     fa=[(0,0,"") for i in range(ai+1)]
-#     for i in range(ai):
-#         ans.append(str(i+1)+' '+str(a[i]))
-#     i=1
-#     while (i<ai):
-#         j=i+1
-#         while j<ai:
-#             (key,fr)=task1.check(a[i],a[j])
-#             if (key!=''):
-#                 aadd=()
-#                 if fr:
-#                     aadd=task1.fusion(a[i],a[j],key)
-#                 else:
-#                     aadd=task1.fusion(a[j],a[i],key)
-#                 a.append(aadd)
-#                 ai+=1
-#                 fa.append((i+1,j+1,str(aadd)))
-#                 ans.append(str(ai)+' R['+str(i+1)+','+str(j+1)+']: '+str(aadd))
-#                 if aadd==():
-#                     temp=[0 for i in range(ai+1)]
-#                     task1.order(ex,fa,ais,ai,temp)
-#                     return ans
-#             j+=1
-#         i+=1
-#     return ans
-
 def isvariate(f:str): #判断是否是变量
     if f in ['xx','yy','zz','uu','vv','ww']:
         return True
@@ -117,6 +35,62 @@ def peel(f:str): #去掉最外层谓词
     else:
         f=""
     return (name,f)
+
+def order(table:list,fa:list,origin:int,x:int):
+    temp=[i<=origin for i in range(x+1)]
+    realnum=[0 for i in range(x+1)]
+    bfs=[x,]
+    bi=0
+    while (bi<len(bfs)):
+        k=bfs[bi]
+        if k<=origin:
+            bi+=1
+            continue
+        temp[k]=True
+        if (not temp[fa[k][0]]):
+            bfs.append(fa[k][0])
+        if (not temp[fa[k][1]]):
+            bfs.append(fa[k][1])
+        bi+=1
+    ex=[]
+    for i in range(1,x+1):
+        if temp[i]:
+            if i>origin:
+                ex.append(str(len(ex)+1)+' R['+str(realnum[fa[i][0]])+','+str(realnum[fa[i][1]])+']: '+table[i])
+            else:
+                ex.append(str(len(ex)+1)+' '+table[i])
+            realnum[i]=len(ex)
+    return ex
+
+def ResolutionProp(KB):
+    ans=[""]
+    a=list(KB)
+    ai=len(a)
+    ais=len(a)
+    fa=[(0,0,"") for i in range(ai+1)]
+    for i in range(ai):
+        ans.append(str(a[i]))
+    i=0
+    while (i<ai):
+        j=i+1
+        while j<ai:
+            (key,fr)=task1.check(a[i],a[j])
+            if (key!=''):
+                aadd=()
+                if fr:
+                    aadd=task1.fusion(a[i],a[j],key)
+                else:
+                    aadd=task1.fusion(a[j],a[i],key)
+                a.append(aadd)
+                ai+=1
+                fa.append((i+1,j+1,str(aadd)))
+                ans.append(str(aadd))
+                if aadd==():
+                    return order(ans,fa,ais,ai)
+            j+=1
+        i+=1
+    return order(ans,fa,ais,ai)
+
 def MGU(f1:str, f2:str):
     (f1name,f1in)=peel(f1)
     (f2name,f2in)=peel(f2)
@@ -187,12 +161,13 @@ def fusion(a:tuple,b:tuple,key:str,chg:dict):
             ans.append(i)
     return tuple(ans)
 def ResolutionFOL(KB):
-    ans=[]
+    ans=[""]
     a=list(KB)
     ai=len(a)
-    ais=ai
+    ais=len(a)
+    fa=[(0,0) for i in range(ai+1)]
     for i in range(ais):
-        ans.append(str(i+1)+' '+str(a[i]))
+        ans.append(str(a[i]))
     i=0
     while i<ai:
         j=i+1
@@ -211,18 +186,20 @@ def ResolutionFOL(KB):
                 a.append(aadd)
                 ai+=1
                 if (chg=={}):
-                    ans.append(str(ai)+' R['+str(i+1)+','+str(j+1)+']: '+str(aadd))
+                    ans.append(str(aadd))
+                    fa.append((i+1,j+1))
                 else:
-                    s=str(ai)+' R['+str(i+1)+','+str(j+1)+']{'
+                    s='{'
                     for (key,value) in chg.items():
                         s+=key+'='+value+','
                     s=s[:len(s)-1]+'}: '+str(aadd)
                     ans.append(s)
+                    fa.append((i+1,j+1))
                 if aadd==():
-                    return ans
+                    return order(ans,fa,ais,ai)
             j+=1
         i=i+1
-    return ans
+    return order(ans,fa,ais,ai)
 
 
 if __name__ == '__main__':
@@ -232,11 +209,11 @@ if __name__ == '__main__':
     result1 = ResolutionProp(KB1)
     for r in result1:
         print(r)
-    # MGU('P', 'P')
-    # print(MGU('P(xx,a)', 'P(b,yy)'))
-    # print(MGU('P(a,xx,f(g(yy)))', 'P(zz,f(zz),f(uu))'))
+    MGU('P', 'P')
+    print(MGU('P(xx,a)', 'P(b,yy)'))
+    print(MGU('P(a,xx,f(g(yy)))', 'P(zz,f(zz),f(uu))'))
 
-    # KB2 = {('On(a,b)',), ('On(b,c)',), ('Green(a)',), ('~Green(c)',), ('~On(xx,yy)', '~Green(xx)', 'Green(yy)')}
-    # result2 = ResolutionFOL(KB2)
-    # for r in result2:
-    #     print(r)
+    KB2 = {('On(a,b)',), ('On(b,c)',), ('Green(a)',), ('~Green(c)',), ('~On(xx,yy)', '~Green(xx)', 'Green(yy)')}
+    result2 = ResolutionFOL(KB2)
+    for r in result2:
+        print(r)
