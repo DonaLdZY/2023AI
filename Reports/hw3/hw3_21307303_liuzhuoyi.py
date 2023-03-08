@@ -24,7 +24,7 @@ def diff(f1:list,f2:list): #找出不匹配项
     for i in range(len(f1)):
         if f1[i]!=f2[i]:
             return (f1[i],f2[i])
-def peel(f:str): #去掉最外层谓词
+def peel(f:str): #分离外层谓词名与内容
     nl=0
     while nl<len(f) and (f[nl].isalpha() or f[nl]=='~'):
         nl+=1
@@ -35,8 +35,7 @@ def peel(f:str): #去掉最外层谓词
     else:
         f=""
     return (name,f)
-
-def order(table:list,fa:list,origin:int,x:int):
+def order(table:list,fa:list,origin:int,x:int): #table过程 fa推理来源 origin原始条件 x最终结果
     temp=[i<=origin for i in range(x+1)]
     realnum=[0 for i in range(x+1)]
     bfs=[x,]
@@ -46,11 +45,12 @@ def order(table:list,fa:list,origin:int,x:int):
         if k<=origin:
             bi+=1
             continue
-        temp[k]=True
         if (not temp[fa[k][0]]):
             bfs.append(fa[k][0])
+            temp[fa[k][0]]=True
         if (not temp[fa[k][1]]):
             bfs.append(fa[k][1])
+            temp[fa[k][1]]=True
         bi+=1
     ex=[]
     for i in range(1,x+1):
@@ -92,7 +92,7 @@ def ResolutionProp(KB):
     return order(ans,fa,ais,ai)
 
 def MGU(f1:str, f2:str):
-    (f1name,f1in)=peel(f1)
+    (f1name,f1in)=peel(f1) #拆出最外层的谓词
     (f2name,f2in)=peel(f2)
     if (f1name != f2name):
         return {}
@@ -143,9 +143,8 @@ def check(a:tuple,b:tuple):
                 if (chg!={}):
                     return (ai,chg,1)
     return ("",{},2)
-def chgs(a:str,chg:dict):
+def chgs(a:str,chg:dict): 
     for (key,val) in chg.items():
-        #print("changing",key,val)
         a=a.replace(key,val)
     return a
 def fusion(a:tuple,b:tuple,key:str,chg:dict):
@@ -204,6 +203,7 @@ def ResolutionFOL(KB):
 
 if __name__ == '__main__':
     # 测试程序
+    print("test1")
     KB1 = {('FirstGrade',), ('~FirstGrade', 'Child'), ('~Child',)}
     #result1 = ResolutionProp(KB1)
     result1 = ResolutionProp(KB1)
