@@ -1,21 +1,3 @@
-# class task1:
-#     def check(a:tuple,b:tuple):
-#         for i in a:
-#             for j in b:
-#                 if ('~'+i==j):
-#                     return (i,1)
-#                 if ('~'+j==i):
-#                     return (j,0)
-#         return ('',0)
-#     def fusion(a:tuple,b:tuple,key:str):
-#         ans=[]
-#         for i in a:
-#             if i!=key:
-#                 ans.append(i)
-#         for i in b:
-#             if i!='~'+key:
-#                 ans.append(i)
-#         return tuple(ans)
 def isvariate(f:str): #判断是否是变量
     if f in ['xx','yy','zz','uu','vv','ww']:
         return True
@@ -35,34 +17,6 @@ def peel(f:str): #分离外层谓词名与内容
     else:
         f=""
     return (name,f)
-# def ResolutionProp(KB):
-#     ans=[""]
-#     a=list(KB)
-#     ai=len(a)
-#     ais=len(a)
-#     fa=[(0,0,"") for i in range(ai+1)]
-#     for i in range(ai):
-#         ans.append(str(a[i]))
-#     i=0
-#     while (i<ai):
-#         j=0
-#         while j<ai:
-#             (key,fr)=task1.check(a[i],a[j])
-#             if (key!=''):
-#                 aadd=()
-#                 if fr:
-#                     aadd=task1.fusion(a[i],a[j],key)
-#                 else:
-#                     aadd=task1.fusion(a[j],a[i],key)
-#                 a.append(aadd)
-#                 ai+=1
-#                 fa.append((i+1,j+1,str(aadd)))
-#                 ans.append(str(aadd))
-#                 if aadd==():
-#                     return order(ans,fa,ais,ai)
-#             j+=1
-#         i+=1
-#     return order(ans,fa,ais,ai)
 def MGU(f1:str, f2:str): #归一化
     (f1name,f1in)=peel(f1) #拆出最外层的谓词
     (f2name,f2in)=peel(f2)
