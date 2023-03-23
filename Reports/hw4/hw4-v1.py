@@ -37,8 +37,7 @@ def A_star(puzzle):
     finall=encode([[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,0]])
     trap=encode([[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,15,14,0]])
     fr={origin:[0,0,0]} #from来自信息哈希值:[动了几步，动了什么，上一步的hash]
-    op={origin:2*
-        miraishi(puzzle)} #openinglist{哈希值:估值函数值}
+    op={origin:2*miraishi(puzzle)} #openinglist{哈希值:估值函数值}
     cl=set() #closedlist
     while len(op)>0 and (not (finall in cl)):
         nwh=0
@@ -81,17 +80,59 @@ def A_star(puzzle):
     ans.reverse()
     return ans
 if __name__ == '__main__':
-    # 可自己创建更多用例并分析算法性能
+    import time
+    print("go task0")
+    puzzle = [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [0, 13, 14, 15]]
+    start=time.time()
+    sol = A_star(puzzle)
+    end=time.time()
+    print("time:",end-start)
+    print(len(sol),sol)
 
-    puzzle1 = [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [0, 13, 14, 15]]
-    puzzle2 = [[5, 1, 3, 4], [2, 7, 8, 12], [9, 6, 11, 15], [0, 13, 10, 14]]
-    sol1 = A_star(puzzle1)
-    sol2 = A_star(puzzle2)
-    print(sol1)
-    print(sol2)
-    puzzle3= [[14,10,6,0],[4,9,1,8],[2,3,5,11],[12,13,7,15]]
-    sol3=A_star(puzzle3)
-    print(sol3)
-    puzzle4= [[0,5,15,14],[7,9,6,13],[1,2,12,10],[12,13,7,15]]
-    sol4=A_star(puzzle4)
-    print(sol4)
+    print("go task1")
+    puzzle = [[1, 2, 4, 8], [5, 7, 11, 10], [13, 15, 0, 3], [14, 6, 9, 12]]
+    start=time.time()
+    sol = A_star(puzzle)
+    end=time.time()
+    print("time:",end-start)
+    print(len(sol),sol)
+
+    print("go task2")
+    puzzle = [[5, 1, 3, 4], [2, 7, 8, 12], [9, 6, 11, 15], [0, 13, 10, 14]]
+    start=time.time()
+    sol = A_star(puzzle)
+    end=time.time()
+    print("time:",end-start)
+    print(len(sol),sol)
+
+    print("go task3")
+    puzzle = [[14, 10, 6, 0],[4, 9 ,1 ,8],[2, 3, 5 ,11],[12, 13, 7 ,15]]
+    start=time.time()
+    sol = A_star(puzzle)
+    end=time.time()
+    print("time:",end-start)
+    print(len(sol),sol)
+
+    print("go task4")
+    puzzle = [[6, 10, 3, 15],[14, 8, 7, 11], [5, 1, 0, 2],[13, 12, 9, 4]] 
+    start=time.time()
+    sol = A_star(puzzle)
+    end=time.time()
+    print("time:",end-start)
+    print(len(sol),sol)
+
+    print("go task5")
+    puzzle = [[11, 3, 1, 7],[4, 6, 8, 2], [15, 9, 10, 13],[14, 12, 5, 0]] 
+    start=time.time()
+    sol = A_star(puzzle)
+    end=time.time()
+    print("time:",end-start)
+    print(len(sol),sol)
+
+    print("go task6")
+    puzzle = [[0, 5, 15, 14],[7, 9, 6, 13], [1, 2, 12, 10],[8, 11, 4, 3]] 
+    start=time.time()
+    sol = A_star(puzzle)
+    end=time.time()
+    print("time:",end-start)
+    print(len(sol),sol)
