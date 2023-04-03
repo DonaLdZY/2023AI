@@ -21,7 +21,8 @@ def move(nw:list,xz,yz,xi,yi): #生成新的状态,并且[xz,yz]与[xi,yi]交换
     nxt[xz][yz],nxt[xi][yi]=nxt[xi][yi],nxt[xz][yz]
     return nxt
 def heuristic(puzzle): #启发式函数
-    miracle=[0,1,4,6,9,11,14]
+    miracle=[0,1,4,5,6,7,8]
+    #miracle=[0,1,4,5,7,8,9]
     ans=0
     for i in range(4):
         for j in range(4):
@@ -133,7 +134,7 @@ if __name__ == '__main__':
     print("time:",end-start)
     print(len(sol),sol)
 
-    print("go task3")
+    print("go task3 (2)")
     puzzle = [[14, 10, 6, 0],[4, 9 ,1 ,8],[2, 3, 5 ,11],[12, 13, 7 ,15]]
     start=time.time()
     sol = A_star(puzzle)
@@ -141,7 +142,7 @@ if __name__ == '__main__':
     print("time:",end-start)
     print(len(sol),sol)
 
-    print("go task4")
+    print("go task4 (4)")
     puzzle = [[6, 10, 3, 15],[14, 8, 7, 11], [5, 1, 0, 2],[13, 12, 9, 4]] 
     start=time.time()
     sol = A_star(puzzle)
@@ -149,7 +150,7 @@ if __name__ == '__main__':
     print("time:",end-start)
     print(len(sol),sol)
 
-    print("go task5")
+    print("go task5 (1)")
     puzzle = [[11, 3, 1, 7],[4, 6, 8, 2], [15, 9, 10, 13],[14, 12, 5, 0]] 
     start=time.time()
     sol = A_star(puzzle)
@@ -157,7 +158,7 @@ if __name__ == '__main__':
     print("time:",end-start)
     print(len(sol),sol)
 
-    print("go task6")
+    print("go task6 (3)")
     puzzle = [[0, 5, 15, 14],[7, 9, 6, 13], [1, 2, 12, 10],[8, 11, 4, 3]] 
     start=time.time()
     sol = A_star(puzzle)
