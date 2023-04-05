@@ -1,36 +1,101 @@
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-import random
-import math
-import time
+# 人工智能实验报告 第6周
 
-class GeneticAlgTSP:
-# ——数据部分——
-# data_name数据集的名字
-# city_name各个城市的名字
-# city_location各个城市的坐标
-# city_num城市的个数
-# ——超参数——
-# capacity 种群上限、
-# extinction 物种大灭绝周期
-# patience 迭代p次没有改善的话退出迭代
-# vary_rate 变异率
-# ——模型参数——
-# gen 已经迭代的次数
-# population 种群个体信息
-# 	每个个体基因前city_num位表示基因信息，最后一位存放适应度
-# best 已经找到的最短路长
-#  ——日志文件-——
-# log_open 是否记录日志
-# log_path 日志存放目录
-# checkpoint  绘制总体优化图时的检查点间隔
-# loppoint 往日志文件写入记录的周期
-# drawpoint 生成当前最优路线图的周期
-# min_log 种群中最差的适应值的日志
-# max_log 种群中最好的适应值的日志
-# log_point 存日志时的时间点
-    def __init__(self, tsp_filename, logs=False):
+姓名:刘卓逸  学号:21307303
+
+## 一.实验题目
+
+hw5 用遗传算法解决TSP问题
+
+## 二.实验内容
+
+### 1.算法原理
+
+```
+建立种群数量为m的种群
+进行T次迭代：
+    随机挑选m/2对个体进行交配：
+        将亲本的部分片段交换，生成两个子代 (交叉)
+    对每个个体判断是否变异：
+        若变异，则分别生成 部分片段反转 与 部分片段位移 的两个子代(变异)
+    对种群按照适应度(按照基因走一遍城市所需距离)排序
+    保留前面m个个体，抛弃其余个体(选择)
+    若连续p次迭代最优个体仍然没有改变：
+        则终止迭代
+返回最优个体作为最终结果
+```
+
+改进思路
+
+问题1：随着迭代次数的上升，种群的基因多样性会下降，个体之间十分接近
+    改进1：为了增加基因多样性，根据遗传算法的仿生特性，引入“物种大灭绝”。物种大灭绝旨在通过种群大面积死亡引入随机基因使得最优个体更有可能改善
+
+问题2：物种大灭绝引入的随机基因相互交配的话作用不大浪费计算时间
+    改进2：物种大灭绝一定次数后，选择交配个体时，其中一分指定为最优的三个个体之一
+    
+下文会探讨此改进实际的改进效果
+
+```
+建立种群数量为m的种群
+进行T次迭代：
+    若连续d的代最优个体没有改善，则物种大灭绝：
+        种群后80%的个体全部死亡，用随机个体补充种群至种群上限
+    随机挑选m/2对个体进行交配：
+        若连续k次物种大灭绝最优个体没有优化，则亲本之一设为最优的三个个体之一
+        将亲本的部分片段交换，生成两个子代 (交叉)
+    对每个个体判断是否变异：
+        若变异，则分别生成 部分片段反转 与 部分片段位移 的两个子代(变异)
+    对种群按照适应度(按照基因走一遍城市所需距离)排序
+    保留前面m个个体，抛弃其余个体(选择)
+    若连续p次迭代最优个体仍然没有改变：
+        则终止迭代
+返回最优个体作为最终结果
+```
+
+### 2.关键代码展示
+
+##### 类的定义
+
+```
+——数据部分——
+data_name数据集的名字
+city_name各个城市的名字
+city_location各个城市的坐标
+city_num城市的个数
+——超参数——
+capacity 种群上限、
+extinction 物种大灭绝周期
+patience 迭代p次没有改善的话退出迭代
+vary_rate 变异率
+——模型参数——
+gen 已经迭代的次数
+population 种群个体信息
+    每个个体基因前city_num位表示基因信息，最后一位存放适应度
+best 已经找到的最短路长
+ ——日志文件-——
+log_open 是否记录日志
+log_path 日志存放目录
+checkpoint  绘制总体优化图时的检查点间隔
+loppoint 往日志文件写入记录的周期
+drawpoint 生成当前最优路线图的周期
+min_log 种群中最差的适应值的日志
+max_log 种群中最好的适应值的日志
+log_point 存日志时的时间点
+```
+
+##### 模型初始化 __init__()
+
+包括读取数据，设置超参数，建立种群，初始化日志 四个部分
+
+一些超参数的选择：
+
+变异率0.5，因为设定的变异不会让变异者消失，所以觉得越大越好，但是会导致每次迭代排序时间边长，设0.5纯属随缘
+
+patience设为city_num的1.4次方，这是通过多次实验得出的较好的参数
+
+
+
+```python
+	def __init__(self, tsp_filename, logs=False):
         #加载数据
         self.data_name=tsp_filename.split('\\')[-1].split('.')[0]
         ct=0 #找到数据开始的地方
@@ -61,9 +126,9 @@ class GeneticAlgTSP:
         self.best=self.population[0][-1]
         #记录初始信息
         self.log_open=logs
-        self.checkpoint=100
-        self.drawpoint=1000
-        self.logpoint=100
+        self.checkpoint=1
+        self.drawpoint=10
+        self.logpoint=10
         self.log_path='Reports\\hw5\\data\\'
         if self.log_open:
             self.drawmap()
@@ -73,18 +138,36 @@ class GeneticAlgTSP:
             self.min_log=[self.population[-1][-1]]
             self.max_log=[self.population[1][-1]]
         print("ready")
+```
 
+##### 适应度计算 fitness()
+
+按照基因走一遍城市所需的路径长度就是适应值（越小越好）
+
+```python
     def fitness(self,idvd): #计算适应值，越低越好
         ans=0
         for i in range(self.city_num):
             ans+=math.sqrt((self.city_location[idvd[i]][0]-self.city_location[idvd[i-1]][0])*(self.city_location[idvd[i]][0]-self.city_location[idvd[i-1]][0])+(self.city_location[idvd[i]][1]-self.city_location[idvd[i-1]][1])*(self.city_location[idvd[i]][1]-self.city_location[idvd[i-1]][1]))
         return ans
-    def generate_individual(self): #生成一个随机的个体
+```
+
+##### 产生随机个体 generate_individual()
+
+```python
+	def generate_individual(self): #生成一个随机的个体
         lst=list(range(0,self.city_num))
         random.shuffle(lst)
         x=random.randint(0,self.city_num)
         return lst[x:self.city_num]+lst[0:x]
-    def vary1(self,ex): #基因突变(片段反转)
+```
+
+##### 变异 vary1() 与 vary2()
+
+定义了两种变异方式，片段反转与片段位移
+
+```python
+ 	def vary1(self,ex): #基因突变(片段反转)
         x=random.randint(0,self.city_num)
         y=random.randint(0,self.city_num)
         if (x>y):
@@ -103,8 +186,14 @@ class GeneticAlgTSP:
         cut=ex[x:y]
         z=random.randint(0,len(temp))
         return temp[0:z]+cut+temp[z:len(temp)]
-    
-    def fusion(self,father,mother): #杂交育种
+```
+
+##### 交叉结合 fusion()
+
+两个亲代片段交换产生两个新的子代
+
+```python
+	def fusion(self,father,mother): #杂交育种
         x=random.randint(0,self.city_num)
         y=random.randint(0,self.city_num)
         if (x>y):
@@ -127,8 +216,12 @@ class GeneticAlgTSP:
         girls.append(self.fitness(girls))
         self.population.append(boys)
         self.population.append(girls)
+```
 
-    def iterate(self, num_iterations): #迭代
+##### 种群迭代
+
+```python
+	def iterate(self, num_iterations): #迭代
         begin=time.time()
         pc=0
         for _ in range(1,num_iterations):
@@ -166,17 +259,20 @@ class GeneticAlgTSP:
                 break
             #日志记录
             self.updatelog()
-
-        end=time.time()
+            
+ 		end=time.time()
         if self.log_open:
             self.updatelog(True)
             with open(self.log_path+str(self.data_name)+'_log.txt',"a+") as outputs:
                 outputs.write('time cost : '+str(end-begin))
         print("Finishing at",self.gen,"th gen")
         return [self.population[1][-1],[i+1 for i in self.population[0][0:self.city_num]]]
-    
+```
 
-    def updatelog(self,force=False):
+##### 日志记录
+
+```python
+	def updatelog(self,force=False):
         if not self.log_open:
             return
         if self.gen%self.drawpoint==0 or force:
@@ -207,14 +303,110 @@ class GeneticAlgTSP:
         plt.ylabel('cost')
         plt.xlabel('iteration')
         plt.savefig(self.log_path+str(self.data_name)+'_overall'+'.jpg')
+```
 
-def set_random():
-    t = int( time.time() * 1000.0 )
-    random.seed( ((t & 0xff000000) >> 24) +((t & 0x00ff0000) >>  8) +((t & 0x0000ff00) <<  8) +((t & 0x000000ff) << 24)   )
-if __name__ == "__main__":
-    set_random()
-    T = 300000
-    tsp = GeneticAlgTSP('实验课\\Homework\\hw5\\qa194.tsp',logs=True)
-    tour = tsp.iterate(T)  # 对算法迭代T次
-    print(tour)  # 打印路径(以列表的形式)
+### 3.创新点&优化
 
+引入物种大灭绝以及种群之王的机制，增强了对最优数据的扰动使得收敛更快并能找到更好的结果
+
+## 三.实验结果及分析
+
+### 实验结果展示示例
+
+#### 改进前
+
+##### wi29
+
+![def](image/hw5_21307303_liuzhuoyi/1680686455357.jpg)
+
+![def](image/hw5_21307303_liuzhuoyi/1680686462284.jpg)
+
+time cost : 20.547053575515747（包括大量绘图）
+
+##### dj38
+
+![def](image/hw5_21307303_liuzhuoyi/1680686490184.jpg)
+
+![def](image/hw5_21307303_liuzhuoyi/1680686509718.jpg)
+
+time cost : 70.09247541427612（包括大量绘图）
+
+##### qa194
+
+![def](image/hw5_21307303_liuzhuoyi/1680686626906.jpg)
+
+![def](image/hw5_21307303_liuzhuoyi/1680686630675.jpg)
+
+time cost : 333.2304301261902
+
+##### uy734[注：手动中断了]
+
+![def](image/hw5_21307303_liuzhuoyi/1680686795678.jpg)
+
+![def](image/hw5_21307303_liuzhuoyi/1680686800567.jpg)
+
+#### 改进后(加入物种灭绝机制)
+
+##### wi29
+
+![depic](image/hw5_21307303_liuzhuoyi/1680685853004.jpg)
+
+![def](image/hw5_21307303_liuzhuoyi/1680685864538.jpg)
+
+time cost : 23.502338409423828（包括大量绘图）
+
+##### dj38
+
+![def](image/hw5_21307303_liuzhuoyi/1680685971681.jpg)
+
+![def](image/hw5_21307303_liuzhuoyi/1680685986805.jpg)
+
+time cost : 44.70436215400696 （包括大量绘图）
+
+##### qa194
+
+![def](image/hw5_21307303_liuzhuoyi/1680686278758.jpg)
+
+![def](image/hw5_21307303_liuzhuoyi/1680686284176.jpg)
+
+time cost : 554.5067965984344
+
+##### uy734
+
+![def](image/hw5_21307303_liuzhuoyi/1680686337759.jpg)
+
+![def](image/hw5_21307303_liuzhuoyi/1680686353605.jpg)
+
+### 评测指标展示及分析
+
+#### 引入“物种大灭绝”的效果
+
+分析以下典型数据：优化前后的代码跑qa194数据某次迭代了三千多代的总体优化图：
+
+优化前
+![def](image/hw5_21307303_liuzhuoyi/1680687106811.png)
+
+优化后
+![def](image/hw5_21307303_liuzhuoyi/1680687135218.png)
+
+不难看出引入物种大灭绝，**收敛速度加快了**，
+
+同时，物种大灭绝增大了对最优数据的扰动，使得**最终找到的结果**更好了
+
+**但是**,物种大灭绝时重新构造随机个体时耗费了大量的时间，使得**平均迭代一次的时间慢了很多**
+
+#### 遗传算法的分析
+
+离结果越远，收敛的越快，换言之离结果很近时收敛很慢，如在跑uy734时，从90000优化到88000只迭代了6000代，88000到87000迭代了26000代，从87000迭代到最终结果86917就要15000代，还没算上86917到迭代弹出的11000代
+
+<style>
+     img[alt="dnm"]{
+
+     }
+     img[alt="def"]{
+          width:450px;
+     }
+     img[alt="small"]{
+          width:100px;
+     }
+</style>
