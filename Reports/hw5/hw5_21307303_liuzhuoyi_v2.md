@@ -31,7 +31,7 @@ hw5 用遗传算法解决TSP问题
 
 问题2：物种大灭绝引入的随机基因相互交配的话作用不大浪费计算时间
     改进2：物种大灭绝一定次数后，选择交配个体时，其中一分指定为最优的三个个体之一
-    
+
 下文会探讨此改进实际的改进效果
 
 ```
@@ -91,8 +91,6 @@ log_point 存日志时的时间点
 变异率0.5，因为设定的变异不会让变异者消失，所以觉得越大越好，但是会导致每次迭代排序时间边长，设0.5纯属随缘
 
 patience设为city_num的1.4次方，这是通过多次实验得出的较好的参数
-
-
 
 ```python
 	def __init__(self, tsp_filename, logs=False):
@@ -171,17 +169,13 @@ patience设为city_num的1.4次方，这是通过多次实验得出的较好的�
         x=random.randint(0,self.city_num)
         y=random.randint(0,self.city_num)
         if (x>y):
-            x=x^y
-            y=x^y
-            x=x^y
+            (x,y)=(y,x)
         return ex[0:x]+list(reversed(ex[x:y]))+ex[y:self.city_num]
     def vary2(self,ex): #基因突变(片段位移)
         x=random.randint(0,self.city_num)
         y=random.randint(0,self.city_num)
         if (x>y):
-            x=x^y
-            y=x^y
-            x=x^y
+            (x,y)=(y,x)
         temp=ex[0:x]+ex[y:self.city_num]
         cut=ex[x:y]
         z=random.randint(0,len(temp))
@@ -197,9 +191,7 @@ patience设为city_num的1.4次方，这是通过多次实验得出的较好的�
         x=random.randint(0,self.city_num)
         y=random.randint(0,self.city_num)
         if (x>y):
-            x=x^y
-            y=x^y
-            x=x^y
+            (x,y)=(y,x)
         boy=father[0:x]+father[y:self.city_num]
         boyc=mother[x:y]
         girl=mother[0:x]+mother[y:self.city_num]
@@ -209,7 +201,7 @@ patience设为city_num的1.4次方，这是通过多次实验得出的较好的�
                 boy[i]=girlc[boyc.index(boy[i])]
         for i in range(len(girl)):
             while (girl[i] in girlc):
-                girl[i]=boyc[girlc.index(girl[i])]    
+                girl[i]=boyc[girlc.index(girl[i])]  
         boys=boy[0:x]+boyc+boy[x:]
         girls=girl[0:x]+girlc+girl[x:]
         boys.append(self.fitness(boys))
@@ -259,7 +251,7 @@ patience设为city_num的1.4次方，这是通过多次实验得出的较好的�
                 break
             #日志记录
             self.updatelog()
-            
+        
  		end=time.time()
         if self.log_open:
             self.updatelog(True)
@@ -272,7 +264,7 @@ patience设为city_num的1.4次方，这是通过多次实验得出的较好的�
 ##### 日志记录
 
 ```python
-	def updatelog(self,force=False):
+    def updatelog(self,force=False):
         if not self.log_open:
             return
         if self.gen%self.drawpoint==0 or force:
@@ -280,7 +272,7 @@ patience设为city_num的1.4次方，这是通过多次实验得出的较好的�
         if self.gen%self.checkpoint==0 or force:
             self.log_point.append(self.gen)
             self.min_log.append(self.population[-1][-1])
-            self.max_log.append(self.population[1][-1])
+            self.max_log.append(self.population[0][-1])
             self.plot_diagram()
         if self.gen%self.logpoint==0 or force:
             with open(self.log_path+str(self.data_name)+'_log.txt',"a+") as outputs:
@@ -293,13 +285,16 @@ patience设为city_num的1.4次方，这是通过多次实验得出的较好的�
         ys.append(ys[0])
         plt.plot(xs,ys,color='b')
         plt.scatter(xs,ys,color='r',s=10)
-        plt.title('gen '+str(self.gen)+'\nShortest Path: '+str(self.population[0][-1]))
+        plt.title('gen '+str(self.gen)+'\nShortest Path: '+str(self.best))
         plt.savefig(self.log_path+str(self.data_name)+'_gen'+str(self.gen)+'.jpg')
     def plot_diagram(self): #绘制数据迭代表
         plt.clf()
+        # for i in range(len(self.log_point)):
+        #     if self.max_log[i]!=self.min_log[i]:
+        #         plt.plot([self.log_point[i], self.log_point[i]], [self.max_log[i],self.min_log[i]], color='b')
         for i in range(1,len(self.log_point)):
             plt.plot([self.log_point[i-1], self.log_point[i]], [self.max_log[i-1],self.max_log[i]], color='r')
-        plt.title('gen '+str(self.gen)+'\nShortest Path: '+str(self.max_log[-1]))
+        plt.title('gen '+str(self.gen)+'\nShortest Path: '+str(self.best))
         plt.ylabel('cost')
         plt.xlabel('iteration')
         plt.savefig(self.log_path+str(self.data_name)+'_overall'+'.jpg')
@@ -381,23 +376,25 @@ time cost : 554.5067965984344
 
 #### 引入“物种大灭绝”的效果
 
-分析以下典型数据：优化前后的代码跑qa194数据某次迭代了三千多代的总体优化图：
+分析以下典型数据：优化前后的代码跑qa194数据某次迭代了五千代的总体优化图：
 
 优化前
-![def](image/hw5_21307303_liuzhuoyi/1680687106811.png)
+
+![def](image/hw5_21307303_liuzhuoyi/1680759705899.jpg)
 
 优化后
-![def](image/hw5_21307303_liuzhuoyi/1680687135218.png)
 
-不难看出引入物种大灭绝，**收敛速度加快了**，
+![def](image/hw5_21307303_liuzhuoyi/1680759693900.jpg)
 
-同时，物种大灭绝增大了对最优数据的扰动，使得**最终找到的结果**更好了
+引入物种大灭绝，**收敛速度并无多大区别**，
+
+由于物种大灭绝增大了对最优数据的扰动，使得**最终找到的结果**更好了
 
 **但是**,物种大灭绝时重新构造随机个体时耗费了大量的时间，使得**平均迭代一次的时间慢了很多**
 
 #### 遗传算法的分析
 
-离结果越远，收敛的越快，换言之离结果很近时收敛很慢，如在跑uy734时，从90000优化到88000只迭代了6000代，88000到87000迭代了26000代，从87000迭代到最终结果86917就要15000代，还没算上86917到迭代弹出的11000代
+离结果越远，收敛的越快，换言之离结果很近时收敛很慢，如在跑uy734时，从90000优化到88000只迭代了6000代，88000到87000迭代了26000代，从87000迭代到最终结果86917再到迭代结束又要26000代
 
 <style>
      img[alt="dnm"]{

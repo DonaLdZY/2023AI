@@ -71,7 +71,7 @@ class GeneticAlgTSP:
                 outputs.write(str(0)+' '+str(self.best)+' '+str([i+1 for i in self.population[0][0:self.city_num]])+'\n')
             self.log_point=[0]
             self.min_log=[self.population[-1][-1]]
-            self.max_log=[self.population[1][-1]]
+            self.max_log=[self.population[0][-1]]
         print("ready")
 
     def fitness(self,idvd): #计算适应值，越低越好
@@ -96,9 +96,7 @@ class GeneticAlgTSP:
         x=random.randint(0,self.city_num)
         y=random.randint(0,self.city_num)
         if (x>y):
-            x=x^y
-            y=x^y
-            x=x^y
+            (x,y)=(y,x)
         temp=ex[0:x]+ex[y:self.city_num]
         cut=ex[x:y]
         z=random.randint(0,len(temp))
@@ -108,9 +106,7 @@ class GeneticAlgTSP:
         x=random.randint(0,self.city_num)
         y=random.randint(0,self.city_num)
         if (x>y):
-            x=x^y
-            y=x^y
-            x=x^y
+            (x,y)=(y,x)
         boy=father[0:x]+father[y:self.city_num]
         boyc=mother[x:y]
         girl=mother[0:x]+mother[y:self.city_num]
@@ -184,7 +180,7 @@ class GeneticAlgTSP:
         if self.gen%self.checkpoint==0 or force:
             self.log_point.append(self.gen)
             self.min_log.append(self.population[-1][-1])
-            self.max_log.append(self.population[1][-1])
+            self.max_log.append(self.population[0][-1])
             self.plot_diagram()
         if self.gen%self.logpoint==0 or force:
             with open(self.log_path+str(self.data_name)+'_log.txt',"a+") as outputs:
@@ -197,13 +193,16 @@ class GeneticAlgTSP:
         ys.append(ys[0])
         plt.plot(xs,ys,color='b')
         plt.scatter(xs,ys,color='r',s=10)
-        plt.title('gen '+str(self.gen)+'\nShortest Path: '+str(self.population[0][-1]))
+        plt.title('gen '+str(self.gen)+'\nShortest Path: '+str(self.best))
         plt.savefig(self.log_path+str(self.data_name)+'_gen'+str(self.gen)+'.jpg')
     def plot_diagram(self): #绘制数据迭代表
         plt.clf()
+        # for i in range(len(self.log_point)):
+        #     if self.max_log[i]!=self.min_log[i]:
+        #         plt.plot([self.log_point[i], self.log_point[i]], [self.max_log[i],self.min_log[i]], color='b')
         for i in range(1,len(self.log_point)):
             plt.plot([self.log_point[i-1], self.log_point[i]], [self.max_log[i-1],self.max_log[i]], color='r')
-        plt.title('gen '+str(self.gen)+'\nShortest Path: '+str(self.max_log[-1]))
+        plt.title('gen '+str(self.gen)+'\nShortest Path: '+str(self.best))
         plt.ylabel('cost')
         plt.xlabel('iteration')
         plt.savefig(self.log_path+str(self.data_name)+'_overall'+'.jpg')
@@ -214,7 +213,13 @@ def set_random():
 if __name__ == "__main__":
     set_random()
     T = 300000
-    tsp = GeneticAlgTSP('实验课\\Homework\\hw5\\qa194.tsp',logs=True)
+    # tsp = GeneticAlgTSP('实验课\\Homework\\hw5\\wi29.tsp',logs=True)
+    # tour = tsp.iterate(T)  # 对算法迭代T次
+    # print(tour)  # 打印路径(以列表的形式)
+    # tsp = GeneticAlgTSP('实验课\\Homework\\hw5\\dj38.tsp',logs=True)
+    # tour = tsp.iterate(T)  # 对算法迭代T次
+    # print(tour)  # 打印路径(以列表的形式)
+    tsp = GeneticAlgTSP('实验课\\Homework\\hw5\\qa194.tsp',logs=False)
     tour = tsp.iterate(T)  # 对算法迭代T次
     print(tour)  # 打印路径(以列表的形式)
 
