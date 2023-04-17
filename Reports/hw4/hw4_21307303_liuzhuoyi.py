@@ -21,8 +21,8 @@ def move(nw:list,xz,yz,xi,yi): #生成新的状态,并且[xz,yz]与[xi,yi]交换
     nxt[xz][yz],nxt[xi][yi]=nxt[xi][yi],nxt[xz][yz]
     return nxt
 def heuristic(puzzle): #启发式函数
-    miracle=[0,1,4,5,6,7,8]
-    #miracle=[0,1,4,5,7,8,9]
+    miracle=[0,1,4,6,8,9,10]
+    #miracle=[0,1,34,5,6,7]
     ans=0
     for i in range(4):
         for j in range(4):

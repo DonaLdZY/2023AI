@@ -50,7 +50,7 @@ class GeneticAlgTSP:
         self.capacity=64
         self.patience=int(pow(self.city_num,1.4))
         self.extinction=20
-        self.vary_rate=0.5
+        self.vary_rate=1
         #建立种群
         self.population=[]
         for i in range(self.capacity-len(self.population)):
@@ -72,7 +72,7 @@ class GeneticAlgTSP:
             self.log_point=[0]
             self.min_log=[self.population[-1][-1]]
             self.max_log=[self.population[0][-1]]
-        print("ready")
+            print("ready")
 
     def fitness(self,idvd): #计算适应值，越低越好
         ans=0
@@ -168,8 +168,8 @@ class GeneticAlgTSP:
             self.updatelog(True)
             with open(self.log_path+str(self.data_name)+'_log.txt',"a+") as outputs:
                 outputs.write('time cost : '+str(end-begin))
-        print("Finishing at",self.gen,"th gen")
-        return [self.population[1][-1],[i+1 for i in self.population[0][0:self.city_num]]]
+            print("Finishing at",self.gen,"th gen")
+        return [i+1 for i in self.population[0][0:self.city_num]]
     
 
     def updatelog(self,force=False):
@@ -207,11 +207,8 @@ class GeneticAlgTSP:
         plt.xlabel('iteration')
         plt.savefig(self.log_path+str(self.data_name)+'_overall'+'.jpg')
 
-def set_random():
-    t = int( time.time() * 1000.0 )
-    random.seed( ((t & 0xff000000) >> 24) +((t & 0x00ff0000) >>  8) +((t & 0x0000ff00) <<  8) +((t & 0x000000ff) << 24)   )
 if __name__ == "__main__":
-    set_random()
+    
     T = 300000
     # tsp = GeneticAlgTSP('实验课\\Homework\\hw5\\wi29.tsp',logs=True)
     # tour = tsp.iterate(T)  # 对算法迭代T次
@@ -219,7 +216,7 @@ if __name__ == "__main__":
     # tsp = GeneticAlgTSP('实验课\\Homework\\hw5\\dj38.tsp',logs=True)
     # tour = tsp.iterate(T)  # 对算法迭代T次
     # print(tour)  # 打印路径(以列表的形式)
-    tsp = GeneticAlgTSP('实验课\\Homework\\hw5\\qa194.tsp',logs=False)
+    tsp = GeneticAlgTSP('实验课\\Homework\\hw5\\dj38.tsp',logs=False)
     tour = tsp.iterate(T)  # 对算法迭代T次
     print(tour)  # 打印路径(以列表的形式)
 

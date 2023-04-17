@@ -93,7 +93,7 @@ log_point 存日志时的时间点
 patience设为city_num的1.4次方，这是通过多次实验得出的较好的参数
 
 ```python
-	def __init__(self, tsp_filename, logs=False):
+    def __init__(self, tsp_filename, logs=False):
         #加载数据
         self.data_name=tsp_filename.split('\\')[-1].split('.')[0]
         ct=0 #找到数据开始的地方
@@ -135,7 +135,7 @@ patience设为city_num的1.4次方，这是通过多次实验得出的较好的�
             self.log_point=[0]
             self.min_log=[self.population[-1][-1]]
             self.max_log=[self.population[1][-1]]
-        print("ready")
+            print("ready")
 ```
 
 ##### 适应度计算 fitness()
@@ -153,7 +153,7 @@ patience设为city_num的1.4次方，这是通过多次实验得出的较好的�
 ##### 产生随机个体 generate_individual()
 
 ```python
-	def generate_individual(self): #生成一个随机的个体
+    def generate_individual(self): #生成一个随机的个体
         lst=list(range(0,self.city_num))
         random.shuffle(lst)
         x=random.randint(0,self.city_num)
@@ -165,7 +165,7 @@ patience设为city_num的1.4次方，这是通过多次实验得出的较好的�
 定义了两种变异方式，片段反转与片段位移
 
 ```python
- 	def vary1(self,ex): #基因突变(片段反转)
+     def vary1(self,ex): #基因突变(片段反转)
         x=random.randint(0,self.city_num)
         y=random.randint(0,self.city_num)
         if (x>y):
@@ -187,7 +187,7 @@ patience设为city_num的1.4次方，这是通过多次实验得出的较好的�
 两个亲代片段交换产生两个新的子代
 
 ```python
-	def fusion(self,father,mother): #杂交育种
+    def fusion(self,father,mother): #杂交育种
         x=random.randint(0,self.city_num)
         y=random.randint(0,self.city_num)
         if (x>y):
@@ -213,7 +213,7 @@ patience设为city_num的1.4次方，这是通过多次实验得出的较好的�
 ##### 种群迭代
 
 ```python
-	def iterate(self, num_iterations): #迭代
+    def iterate(self, num_iterations): #迭代
         begin=time.time()
         pc=0
         for _ in range(1,num_iterations):
@@ -251,14 +251,14 @@ patience设为city_num的1.4次方，这是通过多次实验得出的较好的�
                 break
             #日志记录
             self.updatelog()
-        
- 		end=time.time()
+
+         end=time.time()
         if self.log_open:
             self.updatelog(True)
             with open(self.log_path+str(self.data_name)+'_log.txt',"a+") as outputs:
                 outputs.write('time cost : '+str(end-begin))
-        print("Finishing at",self.gen,"th gen")
-        return [self.population[1][-1],[i+1 for i in self.population[0][0:self.city_num]]]
+               print("Finishing at",self.gen,"th gen")
+        return [i+1 for i in self.population[0][0:self.city_num]]
 ```
 
 ##### 日志记录
@@ -302,7 +302,7 @@ patience设为city_num的1.4次方，这是通过多次实验得出的较好的�
 
 ### 3.创新点&优化
 
-引入物种大灭绝以及种群之王的机制，增强了对最优数据的扰动使得收敛更快并能找到更好的结果
+引入物种大灭绝以及种群之王的机制，增强了对最优数据的扰动使得能找到更好的结果
 
 ## 三.实验结果及分析
 
@@ -396,6 +396,10 @@ time cost : 554.5067965984344
 
 离结果越远，收敛的越快，换言之离结果很近时收敛很慢，如在跑uy734时，从90000优化到88000只迭代了6000代，88000到87000迭代了26000代，从87000迭代到最终结果86917再到迭代结束又要26000代
 
+## 四.实验总结
+
+通过这次实验，我学习掌握了遗传算法的思想与应用，学习了如何直观地展现代码过程，通过查阅资料也对机器学习“迭代”的过程有了初步的了解
+
 <style>
      img[alt="dnm"]{
 
@@ -407,3 +411,5 @@ time cost : 554.5067965984344
           width:100px;
      }
 </style>
+
+
