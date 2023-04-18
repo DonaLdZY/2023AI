@@ -22,11 +22,7 @@ class MyDataset(Dataset):
     def __getitem__(self,idx):
         return self.datas[idx],self.label[idx]
 #------ Dataloader ------
-n_workers=8 #用于数据加载的子进程数
-
-def collate_batch(batch):
-    a,b=zip(*batch)
-    return a,b
+n_workers=2 #用于数据加载的子进程数
 
 def get_dataloader(datas_dir,label_dir, batch_size, n_workers,valid_sept=0):
     dataset=MyDataset(datas_dir,label_dir)
@@ -123,13 +119,11 @@ def Testing():
     test_data = torch.load('data\\hw7\\test_data.pth')
     test_labels = torch.load('data\\hw7\\test_labels.pth')
     net.load_state_dict(torch.load('hw7_21307303_liuzhuoyi.pth'))
-    net.eval()
     return test(test_data, test_labels, net)
 
 #------ main ------
-from tqdm.auto import tqdm #进度条可视化
-
 if __name__=="__main__":
+    from tqdm.auto import tqdm #进度条可视化
     #模型实例化
     model=MyConvNet().to(device)
     #分类问题中,用cross-entropy来定义损失函数,用平方误差会导致离答案很远很近都梯度很小
@@ -139,7 +133,7 @@ if __name__=="__main__":
 
     best_acc=0
     with open(f"./{_exp_name}_log.txt","w")as op:
-        op.write("0 0 0 0\n")
+        op.write("0 0 0 0 0\n")
     for epoch in range(n_epochs):
         #dataset/dataloader实例化
         train_loader,valid_loader=get_dataloader(
@@ -186,8 +180,9 @@ if __name__=="__main__":
         train_acc = sum(train_accs) / len(train_accs)
         # 输出信息
         print(f"[ Train | {epoch + 1:03d}/{n_epochs:03d} ] loss = {train_loss:.5f}, acc = {train_acc:.5f}")
+
         with open(f"./{_exp_name}_log.txt","a") as op:
-            op.write(f"{epoch + 1:03d} {train_acc:.5f} ")
+            op.write(f"{epoch + 1:03d} {train_loss:.5f} {train_acc:.5f} ")
         # ------ Validation ------
         #无梯度信息模式
         model.eval()
@@ -215,8 +210,9 @@ if __name__=="__main__":
             print(" -> best") 
         else:
             print("")
+
         with open(f"./{_exp_name}_log.txt","a") as op:
-            op.write(f"{valid_acc:.5f}    {Testing():.5f}\n")
+            op.write(f"{valid_loss:.5f} {valid_acc:.5f}\n")
    
         # 保存模型
         if valid_acc > best_acc:
@@ -224,11 +220,14 @@ if __name__=="__main__":
             torch.save(model.state_dict(), f"{_exp_name}.pth") # only save best to prevent output memory exceed error
             best_acc = valid_acc
             stale = 0
+            with open(f"./{_exp_name}_test_log.txt","a") as op:\
+                op.write(f"{epoch + 1:03d} {Testing():.5f}\n")
         else:
             stale += 1
             if stale > patience:
                 print(f"No improvment {patience} consecutive epochs, early stopping")
                 break
+
     print("final test acc = ",Testing())
     # 如果已经训练完成, 则直接读取网络参数. 注意文件名改为自己的信息
     
