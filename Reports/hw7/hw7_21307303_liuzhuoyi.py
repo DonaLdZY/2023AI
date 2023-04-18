@@ -6,13 +6,7 @@ import torch.optim as optim
 from torch.distributions import Categorical
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset, random_split
-#------ hyper parameter ------
-n_workers=8 #用于数据加载的子进程数
-batch_size=16
-n_epochs=2
-patience=8
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-#------ 
+
 
 #------ Dataset ------
 class MyDataset(Dataset):
@@ -21,10 +15,6 @@ class MyDataset(Dataset):
             return 
         self.datas=torch.load(datas_dir)
         self.label=torch.load(label_dir)
-        # self.label=torch.zeros([self.datas.size()[0],10])
-        # labels=torch.load(label_dir)
-        # for i in range(labels.size()[0]):
-        #     self.label[i][labels[i]]=1
 
     def __len__(self):
         return self.label.size()[0]
@@ -32,6 +22,8 @@ class MyDataset(Dataset):
     def __getitem__(self,idx):
         return self.datas[idx],self.label[idx]
 #------ Dataloader ------
+n_workers=8 #用于数据加载的子进程数
+
 def collate_batch(batch):
     a,b=zip(*batch)
     return a,b
@@ -71,10 +63,8 @@ def get_dataloader(datas_dir,label_dir, batch_size, n_workers,valid_sept=0):
         )
         return loader
 #------ Model ------
-
 #确保每次调用卷积算法返回确定性输出，即默认算法
 torch.backends.cudnn.deterministic = True 
-
 #固定网络结构的模型优化以提高效率，否则会花费时间在选择最合适算法上
 torch.backends.cudnn.benchmark = False 
 
@@ -101,20 +91,25 @@ class MyConvNet(nn.Module):
             nn.Linear(4*7*7,10),
         )
     def forward(self, x):
+        if len(x.size())==3:
+            x=x.unsqueeze(0)
         out=self.cnn(x)
         out=out.view(out.size()[0],-1)
         out=self.fc(out)
         return torch.softmax(out,dim=-1)
 
+#------ hyper parameter ------
+batch_size=16
+n_epochs=32
+patience=8
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+#------ test ------
 def test(data, labels, net):
     num_data = data.shape[0]
     num_correct = 0
     for i in range(num_data):
         feature = data[i]
-        # print(feature.size())
-        feature=feature.unsqueeze(0)
-        # print(feature.size())
         prob = net(feature).detach()
         dist = Categorical(prob)
         label = dist.sample().item()
@@ -123,8 +118,15 @@ def test(data, labels, net):
             num_correct += 1
 
     return num_correct / num_data
+def Testing():
+    net= MyConvNet()
+    test_data = torch.load('data\\hw7\\test_data.pth')
+    test_labels = torch.load('data\\hw7\\test_labels.pth')
+    net.load_state_dict(torch.load('hw7_21307303_liuzhuoyi.pth'))
+    net.eval()
+    return test(test_data, test_labels, net)
 
-
+#------ main ------
 from tqdm.auto import tqdm #进度条可视化
 
 if __name__=="__main__":
@@ -136,8 +138,9 @@ if __name__=="__main__":
     optimizer = torch.optim.Adam(model.parameters(), lr=0.0003, weight_decay=1e-5)
 
     best_acc=0
+    with open(f"./{_exp_name}_log.txt","w")as op:
+        op.write("0 0 0 0\n")
     for epoch in range(n_epochs):
-        print("start",epoch,"th epoch")
         #dataset/dataloader实例化
         train_loader,valid_loader=get_dataloader(
             datas_dir='data\\hw7\\train_data.pth',
@@ -152,7 +155,6 @@ if __name__=="__main__":
             batch_size=batch_size, 
             n_workers=n_workers,
         )
-        print("lets go!")
         #----- Training ------
         #训练模式
         model.train() 
@@ -184,8 +186,8 @@ if __name__=="__main__":
         train_acc = sum(train_accs) / len(train_accs)
         # 输出信息
         print(f"[ Train | {epoch + 1:03d}/{n_epochs:03d} ] loss = {train_loss:.5f}, acc = {train_acc:.5f}")
-        
-        
+        with open(f"./{_exp_name}_log.txt","a") as op:
+            op.write(f"{epoch + 1:03d} {train_acc:.5f} ")
         # ------ Validation ------
         #无梯度信息模式
         model.eval()
@@ -208,12 +210,14 @@ if __name__=="__main__":
         valid_loss = sum(valid_loss) / len(valid_loss)
         valid_acc = sum(valid_accs) / len(valid_accs)
         # 更新日志
+        print(f"[ Valid | {epoch + 1:03d}/{n_epochs:03d} ] loss = {valid_loss:.5f}, acc = {valid_acc:.5f}",end="")
         if valid_acc > best_acc:
-            with open(f"./{_exp_name}_log.txt","a"):
-                print(f"[ Valid | {epoch + 1:03d}/{n_epochs:03d} ] loss = {valid_loss:.5f}, acc = {valid_acc:.5f} -> best")
+            print(" -> best") 
         else:
-            with open(f"./{_exp_name}_log.txt","a"):
-                print(f"[ Valid | {epoch + 1:03d}/{n_epochs:03d} ] loss = {valid_loss:.5f}, acc = {valid_acc:.5f}")
+            print("")
+        with open(f"./{_exp_name}_log.txt","a") as op:
+            op.write(f"{valid_acc:.5f}    {Testing():.5f}\n")
+   
         # 保存模型
         if valid_acc > best_acc:
             print(f"Best model found at epoch {epoch}, saving model")
@@ -225,11 +229,6 @@ if __name__=="__main__":
             if stale > patience:
                 print(f"No improvment {patience} consecutive epochs, early stopping")
                 break
+    print("final test acc = ",Testing())
+    # 如果已经训练完成, 则直接读取网络参数. 注意文件名改为自己的信息
     
-    # # 如果已经训练完成, 则直接读取网络参数. 注意文件名改为自己的信息
-    net= MyConvNet()
-    test_data = torch.load('data\\hw7\\test_data.pth')
-    test_labels = torch.load('data\\hw7\\test_labels.pth')
-    net.load_state_dict(torch.load('hw7_21307303_liuzhuoyi.pth'))
-    net.eval()
-    print("final score:",test(test_data, test_labels, net))
