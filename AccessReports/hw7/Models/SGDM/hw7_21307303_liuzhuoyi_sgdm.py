@@ -1,4 +1,3 @@
-_exp_name="hw7_21307303_liuzhuoyi"
 #------ import env ------
 import torch
 import torch.nn as nn
@@ -12,8 +11,9 @@ torch.backends.cudnn.deterministic = True
 #固定网络结构的模型优化以提高效率，否则会花费时间在选择最合适算法上
 torch.backends.cudnn.benchmark = False 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-
+#------ hyper parameter for Data ------
+batch_size=16
+n_workers=0 #用于数据加载的子进程数 （实验得出越小越好）
 #------ Dataset ------
 class MyDataset(Dataset):
     def __init__(self,datas_dir="",label_dir=""):
@@ -91,6 +91,17 @@ class MyConvNet(nn.Module):
         out=out.view(out.size()[0],-1)
         out=self.fc(out)
         return torch.softmax(out,dim=-1)
+#------ hyper parameter for training------
+n_epochs=64
+patience=48
+log_open=True
+#------ filename ------
+_exp_name="SGDM"
+modelfile=_exp_name+'.pth'
+logfile=_exp_name+"_log.txt"
+scorefile=_exp_name+"_model-score.txt"
+train_datafile='data\\hw7\\train_data.pth'
+train_labelfile='data\\hw7\\train_labels.pth'
 #------ test ------
 def test(data, labels, net):
     num_data = data.shape[0]
@@ -108,18 +119,8 @@ def Testing():
     net= MyConvNet()
     test_data = torch.load('data\\hw7\\test_data.pth')
     test_labels = torch.load('data\\hw7\\test_labels.pth')
-    net.load_state_dict(torch.load('hw7_21307303_liuzhuoyi.pth'))
+    net.load_state_dict(torch.load(modelfile))
     return test(test_data, test_labels, net)
-#------ hyper parameter for training------
-n_epochs=64
-patience=24
-log_open=True
-#------ filename ------
-modelfile='hw7_21307303_liuzhuoyi.pth'
-logfile=f"./hw7_21307303_liuzhuoyi_log.txt"
-scorefile=f"./hw7_21307303_liuzhuoyi_model-score.txt"
-train_datafile='data\\hw7\\train_data.pth'
-train_labelfile='data\\hw7\\train_labels.pth'
 #------ main ------
 if __name__=="__main__":
     from tqdm.auto import tqdm #进度条可视化
@@ -128,7 +129,7 @@ if __name__=="__main__":
     #分类问题中,用cross-entropy来定义损失函数,用平方误差会导致离答案很远很近都梯度很小
     criterion = nn.CrossEntropyLoss()
     #Adam 动态学习率(加快收敛速度)+惯性梯度(避免local minimal)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.0003, weight_decay=1e-5)
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.0003, momentum=1e-5)
 
     if log_open:
         with open(logfile,"w")as op:
