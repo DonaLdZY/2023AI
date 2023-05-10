@@ -38,7 +38,7 @@ class DPAgent:
         
         # 价值迭代
         count=0 #计数器
-        maxc=self.n_state**2 #最大迭代次数
+        maxc=6 #self.n_state**2 #最大迭代次数
         while True:
             count+=1
             delta = 0

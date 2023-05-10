@@ -32,13 +32,14 @@ class DPAgent:
         return [(nx,1,reward)] #在本题中往一个方向行动100%有下个状态
     
     def iteration(self, threshold=1e-3):
-        gamma=1
+        gamma=0.9
         values = np.zeros([self.n_state])
-        policy = np.full([self.n_state, self.n_action],0.25)
+        policy = np.full([self.n_state, self.n_action],[0.25,0.25,0.25,0.25])
         count=0
         while True:
-            env.show_policy(policy)  # 在终端打印每个状态下的动作
             count+=1
+            print(count)
+            env.show_policy(policy)  # 在终端打印每个状态下的动作
             #策略评估
             while True:
                 delta = 0
@@ -51,10 +52,10 @@ class DPAgent:
                         values_new[s]+=policy[s][i]*q_values[i]
                     delta = max(delta, abs(values[s]-values_new[s])) #最大的迭代变化
                 values=values_new #迭代完后更新总体
-                #print(values[env._xy_to_state(3, 1)])
                 if (delta<threshold):
                     break
-            #env.show_values(values, sec=1)  # 将values渲染成颜色格子, 显示3秒
+            if count==4:
+                env.show_values(values, sec=3) 
             #策略优化
             policy_stable=True
             policy_new=np.zeros([self.n_state, self.n_action])
@@ -65,15 +66,13 @@ class DPAgent:
                 maxq=max(q_values)
                 t=1/sum([q_values[i]==maxq for i in range(self.n_action)]) #有多少个多少个取值最大的动作
                 for i in range(self.n_action):
-                    if (q_values[i]==maxq):
+                    if (q_values[i]>=maxq):
                         policy_new[s][i]=t;
-            if policy_new.all()!=policy.all():
-                    policy=policy_new
-            else:
+                if (sum([policy_new[s][i]!=policy[s][i] for i in range(self.n_action)])>0):
+                    policy[s]=policy_new[s]
+                    policy_stable=False
+            if policy_stable:
                 break
-        #print(count)
-        # for i in range(self.n_state):
-        #     print(env._state_to_xy(i),values[i])
         return values, policy
 
 
