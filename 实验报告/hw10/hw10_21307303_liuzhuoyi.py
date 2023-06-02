@@ -51,12 +51,12 @@ output_dim=2
 buffer_capacity=4096
 gamma=0.99
 #epsilon探索率
-eps_max=1
-eps_decay=0.999
+eps_max=0.02
+eps_decay=0.9999
 eps_min=0.01
 #训练参数
 batch_size=256
-episodes=600
+episodes=1000
 max_step=500
 update_target=100
 #----Agent-----
@@ -114,6 +114,7 @@ class MyAgent:
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+        return loss
 
     def load_model(self, file_name):
         self.eval_net.load_state_dict(torch.load(file_name + ".pth", map_location=device))
@@ -138,6 +139,7 @@ if __name__ == '__main__':
         state = env.reset(seed=int(time.time()))[0]
         #print(state)
         episode_reward = 0
+        loss=0
         done = False
         step_cnt = 0
         while not done and step_cnt < max_step:
@@ -149,17 +151,17 @@ if __name__ == '__main__':
             agent.store_transition(state,action,reward,next_state,done) #装载轨迹
             #经验回放池装满了，就开学
             if agent.buffer.len() >= buffer_capacity:
-                agent.learn()
+                loss+=agent.learn()
                 agent.save_model(save_name)
             #记录训练信息
             episode_reward += reward #回报
             #到下一个状态
             state = next_state
         Rewards.append(episode_reward)
-        print(f"Episode: {t}, Reward: {episode_reward}, eps: {agent.eps}") 
+        print(f"Episode: {t}, Reward: {episode_reward}, eps: {agent.eps}, loss: {loss}") 
         if (log_on):
             with open(log_name,'a+')as op:
-                op.write(str(episode_reward)+" "+str(agent.eps)+"\n")
+                op.write(str(episode_reward)+" "+str(agent.eps)+" "+str(loss)+"\n")
     # 计算近10局的均值
     mean_rewards = [np.mean(Rewards[i-10:i]) for i in range(10, len(Rewards))]
     # 绘制曲线图
