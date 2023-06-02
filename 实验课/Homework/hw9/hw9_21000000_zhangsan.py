@@ -34,8 +34,9 @@ class QLAgent:
         self.num_states = num_states
         self.num_actions = num_actions
         self.learning_params = learning_params
-
+        self.qtable={}
     def learn(self, s1, a, r, s2, done):
+        print(s1)
         pass
 
     def get_action(self, state, eval_mode=False):
