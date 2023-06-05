@@ -288,7 +288,7 @@ total reward: 1000.00
 
 #### 可改进的地方
 
-参考《`Rainbow: Combining Improvements in Deep Reinforcement Learnin`》对PPO进行优化：
+参考《`Rainbow: Combining Improvements in Deep Reinforcement Learnin`》对dqn进行优化：
 
 双Q-learning、优先权重回放、对决网络、多步学习、分布式RL、引入噪声
 
