@@ -1,4 +1,4 @@
-# 人工智能实验报告 第10周
+# 人工智能实验报告 第15周
 
 姓名:刘卓逸  学号:21307303
 
@@ -24,6 +24,8 @@ hw10 强化学习: 深度强化学习实践
 + 4. 直接提交代码.py文件和.pth文件到本科生实验hw10_code中, 请不要提交压缩文件和文件夹. 这几个文件和rl_test.py文件放在同一文件夹下时需要保证能够通过run_test()测试.
 
 ### 2.算法原理
+
+使用DQN(Deep Q-Learning)算法解决该问题：
 
 ```
 初始化网络、目标网络
@@ -98,15 +100,15 @@ input_dim=4
 hidden_dim=64
 output_dim=2
 #经验回放池容量
-buffer_capacity=3
+buffer_capacity=4096
 gamma=0.99
 #epsilon探索率
-eps_max=0.5
-eps_decay=0.9995
+eps_max=0.02
+eps_decay=0.9999
 eps_min=0.01
 #训练参数
 batch_size=256
-episodes=600
+episodes=2200
 max_step=500
 update_target=100
 #----Agent-----
@@ -122,7 +124,7 @@ class MyAgent:
         self.criterion = nn.MSELoss()
         #Adam 动态学习率(加快收敛速度)+惯性梯度(避免local minimal)
         self.optimizer = optim.Adam(self.eval_net.parameters(), lr=0.0003, weight_decay=1e-5)
-        
+  
         self.eps_max=eps_max
         self.eps_decay=eps_decay
         self.eps_min=eps_min
@@ -145,12 +147,12 @@ class MyAgent:
     def learn(self):
         #更新eps
         self.eps=max(self.eps*self.eps_decay,self.eps_min)
-        
+  
         if self.learn_step%self.update_target==0:
             self.target_net.load_state_dict(self.eval_net.state_dict())
         self.learn_step+=1
         states, actions, rewards, next_states, dones = self.buffer.sample(self.batch_size)
-        
+  
         actions = torch.LongTensor(actions).to(device)  # LongTensor to use gather latter
         dones = torch.FloatTensor(dones).to(device)
         rewards = torch.FloatTensor(rewards).to(device)
@@ -164,13 +166,14 @@ class MyAgent:
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+        return loss
 
     def load_model(self, file_name):
         self.eval_net.load_state_dict(torch.load(file_name + ".pth", map_location=device))
         self.target_net.load_state_dict(self.eval_net.state_dict())
     def save_model(self, file_name):
         torch.save(self.eval_net.state_dict(),file_name + ".pth")
-    
+  
 
 if __name__ == '__main__':
     load_begin=True
@@ -180,13 +183,15 @@ if __name__ == '__main__':
     log_name = "hw10_21307303_liuzhuoyi_log.txt"
     env = gym.make("CartPole-v1", render_mode="human")
     Rewards=[]
-    exec("from %s import MyAgent"%load_name)
+    #exec("from %s import MyAgent"%load_name)
     agent=MyAgent()
     if load_begin:
         agent.load_model(load_name)
     for t in range(episodes):
         state = env.reset(seed=int(time.time()))[0]
+        #print(state)
         episode_reward = 0
+        loss=0
         done = False
         step_cnt = 0
         while not done and step_cnt < max_step:
@@ -194,75 +199,108 @@ if __name__ == '__main__':
             env.render() 
             action = agent.get_action(state) #算动作
             next_state, reward, done, info, _ = env.step(action) #执行动作
-            #为了使小车在正中间稳定，将回报减去坐标乘一个系数
-            reward-=abs(next_state[0])/5 
+            reward-=abs(next_state[0])/5
             agent.store_transition(state,action,reward,next_state,done) #装载轨迹
             #经验回放池装满了，就开学
             if agent.buffer.len() >= buffer_capacity:
-                agent.learn()
+                loss+=agent.learn()
                 agent.save_model(save_name)
             #记录训练信息
             episode_reward += reward #回报
             #到下一个状态
             state = next_state
         Rewards.append(episode_reward)
-        print(f"Episode: {t}, Reward: {episode_reward}, eps: {agent.eps}") 
+        print(f"Episode: {t}, Reward: {episode_reward}, eps: {agent.eps}, loss: {loss}") 
         if (log_on):
             with open(log_name,'a+')as op:
-                op.write(str(episode_reward)+" "+str(agent.eps)+"\n")
+                op.write(str(episode_reward)+" "+str(agent.eps)+" "+str(loss)+"\n")
 ```
 
 ## 三.实验结果
 
-### 测试结果
+### 训练过程
 
-稳定在正中间抖动
+实际共训练了2200个episode
 
-![1685546917909](image/lab10-21307303-liuzhuoyi/1685546917909.png)
-
-rl_test测试结果：
-
-```shell
-total reward: 200.00
-```
-
-### 训练过程展示
-
-训练分了3次，先奖励单纯就是奖励训练了600个episode，
-
-然后将奖励减去了坐标的绝对值*0.5，在原有模型上先后训练了200个episode与100个episode
+用一下代码来绘制log图像:
 
 ```python
-import matplotlib.pyplot as plt
+	import matplotlib.pyplot as plt
 import numpy as np
 if __name__=="__main__":
     Rewards=[]
     eps=[]
-    with open("实验报告\hw10\hw10_21307303_liuzhuoyi_log.txt","r")as ip:
+    loss=[]
+    with open("hw10_21307303_liuzhuoyi_log.txt","r")as ip:
         for lines in ip.readlines():
             if lines.rstrip()!="":
                 line=lines.rstrip().split(' ')
                 #print(line)
                 Rewards.append(float(line[0]))
                 eps.append(float(line[1]))
+                if line[2]=='0':
+                    loss.append(0.0)
+                else:
+                    loss.append(float(line[2].split(',')[0][7::]))
     # 计算近10局的均值
-    mean_rewards = [np.mean(Rewards[i-10:i]) for i in range(10, len(Rewards))]
+    mean_rewards = [np.mean(Rewards[max(0,i-10):i]) for i in range(0, len(Rewards))]
+
     # 绘制曲线图
-    plt.plot(range(10, len(Rewards)), mean_rewards)
-    plt.plot(range(0,len(eps)) , [i*500 for i in eps])
-    plt.xlabel('Episode')
-    plt.ylabel('Mean Reward')
-    plt.title('Mean Reward of Last 10 Episodes')
+    fig,ax1 = plt.subplots()
+    color1='b'
+    ax1.set_xlabel('Episode')
+    ax1.set_ylabel('Score',color=color1)
+
+    color2='r'
+    ax2 = ax1.twinx()
+    ax2.set_ylabel('Loss',color=color2)
+  
+    ax2.plot(range(0,len(loss)) ,loss , label="Loss" ,color=color2)
+    ax1.plot(range(len(Rewards)), mean_rewards , label="Score" ,color=color1)
+
+    plt.title('Reward & Loss')
     plt.show()
 ```
 
-黄线表示ε的大小(多少概率去随机走)
+![1685799745372](image/lab10-21307303-liuzhuoyi/1685799745372.png)
 
-![1685548246945](image/lab10-21307303-liuzhuoyi/1685548246945.png)
+### 测试结果
 
-## 四.实验总结
+将测试步数提高到了1000以测试模型稳定性
 
-通过这次实验，我对dqn与其他强化学习算法有了深入的了解，对训练方法有自己的思考，锻炼了自己的编程能力，简单实现了dqn算法
+```shell
+total reward: 1000.00
+```
+
+测试过程中，模型趋向于将小车开到正中间然后小幅度高频抖动维持小车稳定
+
+## 四.实验讨论
+
+#### 实验问题
+
+从训练可视化图可以看出，模型在初步训练到高分后，会随着后续训练有几次分数大幅度下降再回升回高分，**由于没有保存中间过程的模型**，无从得知中间发生了什么。
+
+**猜测**是模型在中途有局部过拟合现象：由于奖励函数设计问题，模型趋向于让小车待在地图中间，太久没探索左右，Q_network过拟合了中心的Q*，造成了state在左右两边时的Q值失真
+
+#### 实验亮点
+
+**奖励函数**除了默认的存活就+1，还引入了坐标的绝对值的负数，使得模型趋向于将小车在地图中间稳定，不会出现左右来回摆或者在地图的某一个边缘抖动的现象
+
+#### 可改进的地方
+
+参考《`Rainbow: Combining Improvements in Deep Reinforcement Learnin`》对PPO进行优化：
+
+双Q-learning、优先权重回放、对决网络、多步学习、分布式RL、引入噪声
+
+## 五.实验总结
+
+通过这次实验，我对dqn及其优化有了初步的了解，对训练方法也有自己的思考，锻炼了自己的编程能力，并实践中实现了DQN
+
+## 六。参考文献
+
+[1] DeepMind Technologies. Playing Atari with Deep Reinforcement Learning. 2013
+
+[2] DeepMind Technologies. Rainbow: Combining Improvements in Deep Reinforcement Learning. 2017
 
 <style>
      img[alt="dnm"]{
@@ -275,4 +313,3 @@ if __name__=="__main__":
           width:360px;
      }
 </style>
-

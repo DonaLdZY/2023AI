@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import torch
 if __name__=="__main__":
     Rewards=[]
     eps=[]
@@ -17,13 +16,20 @@ if __name__=="__main__":
                 else:
                     loss.append(float(line[2].split(',')[0][7::]))
     # 计算近10局的均值
-    mean_rewards = [np.mean(Rewards[i-10:i]) for i in range(10, len(Rewards))]
+    mean_rewards = [np.mean(Rewards[max(0,i-10):i]) for i in range(0, len(Rewards))]
+
     # 绘制曲线图
     fig,ax1 = plt.subplots()
-    ax1.plot(range(10, len(Rewards)), mean_rewards,label="line 1")
+    color1='b'
+    ax1.set_xlabel('Episode')
+    ax1.set_ylabel('Score',color=color1)
+
+    color2='r'
     ax2 = ax1.twinx()
-    ax2.plot(range(0,len(eps)) , loss,label="line 2",color="r")
-    plt.xlabel('Episode')
-    plt.ylabel('Mean Reward')
-    plt.title('Mean Reward of Last 10 Episodes')
+    ax2.set_ylabel('Loss',color=color2)
+    
+    ax2.plot(range(0,len(loss)) ,loss , label="Loss" ,color=color2)
+    ax1.plot(range(len(Rewards)), mean_rewards , label="Score" ,color=color1)
+
+    plt.title('Reward & Loss')
     plt.show()

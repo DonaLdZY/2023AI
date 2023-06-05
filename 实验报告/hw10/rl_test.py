@@ -10,7 +10,7 @@ def run_test(agent):
         s1 = env.reset(seed=int(time.time()))[0]
         # Starting interaction with the environment
         r_total = 0
-        for t in range(114514):
+        for t in range(1000):
             a = agent.get_action(s1, eval_mode=True)
             s2, reward, done, _, _ = env.step(a)
             r_total += reward
